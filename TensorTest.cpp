@@ -63,10 +63,10 @@ private:
 			}
 		}
 	}
-	string findFile(string inFilePath, bool isRelativePath) {
+	string findFile(string inFileName, bool isRelativePath) {
 		vector<string> paths;
 		if (isRelativePath) {
-			paths.push_back(command.getCommandArguments().front());
+			paths.push_back(command.getCommandArguments().front());	
 		}
 		else
 			for (auto& directory : (*command.getOptionArguments().begin()).second)
@@ -74,7 +74,7 @@ private:
 
 		for (auto& directory : paths)
 			for (auto& entry : directory_iterator(directory))
-				if (entry.is_regular_file() && entry.path() == inFilePath)
+				if (entry.is_regular_file() && entry.path().filename() == inFileName)
 					return entry.path().generic_string();
 
 		return "";
