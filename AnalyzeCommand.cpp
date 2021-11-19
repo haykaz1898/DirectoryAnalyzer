@@ -1,7 +1,7 @@
 #include "AnalyzeCommand.h"
 #include <filesystem>
-#include "InvalidDirectoryException.h";
-#include "InvalidOptionException.h";
+#include "InvalidDirectoryException.h"
+#include "InvalidOptionException.h"
 
 using namespace std;
 using namespace filesystem;

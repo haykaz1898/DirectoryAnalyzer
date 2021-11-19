@@ -26,9 +26,8 @@ public:
 class Analyzer {
 private:
 	AnalyzeCommand command;
-	Node* root;
 	map<string, Node*> mNodes;
-	queue<Node*> queue;
+	queue<Node*> qQueue;
 	void analyzeFile(Node* inNode) {
 		inNode->isVisited = true;
 		istringstream iss(readFile(inNode->path));
@@ -36,28 +35,27 @@ private:
 		for (line; getline(iss, line);)
 			analyzeRow(line, inNode);
 	}
-	void analyzeRow(string& input, Node* inNode) 
-	{
+	void analyzeRow(string& input, Node* inNode) {
 		if (input.find("#include") != string::npos) {
 			if (input.find("\"") != string::npos) {
 				string fileName = getFileName(input);
 				string fullPath = findFile(fileName, true);
+				string path = fullPath != "" ? fullPath : fileName;
+				Node* pNode = nullptr;
+				if (mNodes.find(path) != mNodes.end())
+					pNode = mNodes[path];
+				else{
+					pNode = new Node(path);
+					mNodes[path] = pNode;
+				}
+				inNode->addOutNode(pNode);
 				if (fullPath != "") {
-					Node* pNode = nullptr;
-
-					if (mNodes.find(fullPath) != mNodes.end())
-						pNode = mNodes[fullPath];
-					else {
-						pNode = new Node(fullPath);
-						mNodes[fullPath] = pNode;
-					}
-
-					inNode->isExist = true;
-					inNode->addOutNode(pNode);
+					pNode->isExist = true;
+					if (!pNode->isVisited)
+						qQueue.push(pNode);
 				}
 				else
-					inNode->isExist = false;
-					
+					pNode->isExist = false;
 			}
 			else if (input.find("<") != string::npos) {
 			}
@@ -76,7 +74,7 @@ private:
 			for (auto& entry : directory_iterator(directory))
 				if (entry.is_regular_file() && entry.path().filename() == inFileName)
 					return entry.path().generic_string();
-
+ 
 		return "";
 	}
 	string getFileName(string& input) {
@@ -85,7 +83,8 @@ private:
 			if (input[index] == '"' || input[index] == '<')
 				for (; index < input.size(); index++)
 					if (index < input.size() && (input[index] != '\"' && input[index] != '>'))
-						sFilename += input[index];
+						if (input[index] != '\r')
+							sFilename += input[index];
 
 		return sFilename;
 	}
@@ -97,22 +96,21 @@ private:
 public:
 	vector<string> analyze(AnalyzeCommand inCommand) {
 		command = inCommand;
-		root = new Node(inCommand.getCommandArguments().front());
+		Node *pRoot = new Node(inCommand.getCommandArguments().front());
 
 		for (auto & entry : directory_iterator(command.getCommandArguments().front()))
 			if (entry.is_regular_file() && entry.path().extension() == ".cpp") {
 				Node* pNode = new Node(entry.path().generic_string());
 				pNode->isExist = true;
 				mNodes[entry.path().generic_string()] = pNode;
-				root->addOutNode(pNode);
-				queue.push(pNode);
+				pRoot->addOutNode(pNode);
+				qQueue.push(pNode);
 			}
 		
-		while (!queue.empty()) {
-			Node* pNode = queue.front();
-			queue.pop();
-			if (!pNode->isVisited)
-				analyzeFile(pNode);
+		while (!qQueue.empty()) {
+			Node* pNode = qQueue.front();
+			qQueue.pop();
+			analyzeFile(pNode);
 		}
 		return vector<string>();
 	}

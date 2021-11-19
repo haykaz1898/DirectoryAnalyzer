@@ -43,3 +43,4 @@
 *.filters
 *.user
 *.vs
+build
