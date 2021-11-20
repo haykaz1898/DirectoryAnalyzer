@@ -7,19 +7,34 @@
 #include <sstream> 
 #include <ostream>
 #include <queue>
+#include <stack>
+#include <algorithm>
 using namespace std;
 using namespace filesystem;
 
 class Node {
 public:
 	string path;
-	vector<Node*> inNodes;
+	string fileName;
 	vector<Node*> outNodes;
 	bool isVisited = false;
 	bool isExist = false;
-	
-	void addOutNode(Node* inNode) { outNodes.push_back(inNode); }
-
+	int iFrequency = 0;
+	void addOutNode(Node* inNode) {  
+		for (auto node : outNodes)
+			if (node == inNode)
+				return;
+		outNodes.push_back(inNode); 
+	}
+	bool hasChilds(){
+		return !outNodes.empty();
+	}
+	static void updateChildrenFrequencies(Node* inNode){
+		for (auto node : inNode->outNodes) {
+			node->iFrequency++;
+			updateChildrenFrequencies(node);
+		}
+	}
 	Node(string inPath) { path = inPath; }
 };
 
@@ -27,7 +42,7 @@ class Analyzer {
 private:
 	AnalyzeCommand command;
 	map<string, Node*> mNodes;
-	queue<Node*> qQueue;
+	stack<Node*> qQueue;
 	void analyzeFile(Node* inNode) {
 		inNode->isVisited = true;
 		istringstream iss(readFile(inNode->path));
@@ -37,28 +52,35 @@ private:
 	}
 	void analyzeRow(string& input, Node* inNode) {
 		if (input.find("#include") != string::npos) {
-			if (input.find("\"") != string::npos) {
-				string fileName = getFileName(input);
-				string fullPath = findFile(fileName, true);
-				string path = fullPath != "" ? fullPath : fileName;
-				Node* pNode = nullptr;
-				if (mNodes.find(path) != mNodes.end())
-					pNode = mNodes[path];
-				else{
-					pNode = new Node(path);
-					mNodes[path] = pNode;
-				}
-				inNode->addOutNode(pNode);
-				if (fullPath != "") {
-					pNode->isExist = true;
-					if (!pNode->isVisited)
-						qQueue.push(pNode);
-				}
-				else
-					pNode->isExist = false;
+			string fileName = getFileName(input);
+			string fullPath;
+			
+			if (input.find("\"") != string::npos)
+				fullPath = findFile(fileName, true);
+			else if (input.find("<") != string::npos)
+				fullPath = findFile(fileName, false);
+
+			string path = fullPath != "" ? fullPath : fileName;
+			
+			Node* pNode = nullptr;
+			if (mNodes.find(path) != mNodes.end())
+				pNode = mNodes[path];
+			else{
+				pNode = new Node(path);
+				mNodes[path] = pNode;
+				pNode->fileName = fileName;
 			}
-			else if (input.find("<") != string::npos) {
+			pNode->iFrequency++;
+			inNode->addOutNode(pNode);
+			if (fullPath != "") {
+				pNode->isExist = true;
+				if (!pNode->isVisited)
+					qQueue.push(pNode);
+				else 
+					Node::updateChildrenFrequencies(pNode);
 			}
+			else
+				pNode->isExist = false;
 		}
 	}
 	string findFile(string inFileName, bool isRelativePath) {
@@ -66,9 +88,14 @@ private:
 		if (isRelativePath) {
 			paths.push_back(command.getCommandArguments().front());	
 		}
-		else
-			for (auto& directory : (*command.getOptionArguments().begin()).second)
-				paths.push_back(directory);
+		else {
+			auto mOptionArguments = command.getOptionArguments();
+			if (!mOptionArguments.empty()){
+				auto directories = (*mOptionArguments.begin()).second;
+				for (auto& directory : directories)
+					paths.push_back(directory);
+			}
+		}
 
 		for (auto& directory : paths)
 			for (auto& entry : directory_iterator(directory))
@@ -82,7 +109,7 @@ private:
 		for (int index = 0; index < input.size(); index++)
 			if (input[index] == '"' || input[index] == '<')
 				for (; index < input.size(); index++)
-					if (index < input.size() && (input[index] != '\"' && input[index] != '>'))
+					if (index < input.size() && (input[index] != '\"' && input[index] != '<' && input[index] != '>'))
 						if (input[index] != '\r')
 							sFilename += input[index];
 
@@ -93,14 +120,41 @@ private:
 		string result;
 		return result.assign(istreambuf_iterator<char>(file), istreambuf_iterator<char>());
 	}
+	void printTree(Node* inNode){
+		static int iLevel = 0;
+		for (auto node : inNode->outNodes) {
+			for (int i = 0; i < iLevel * 2; i++)
+				cout << ".";
+			cout << node->fileName << (!node->isExist ? " (!)\n" : "\n");
+			iLevel++;
+			printTree(node);
+			iLevel--;
+		}
+	}
+	void printFrequencies() {
+		vector<pair<int, string>> frequencies;
+		for (auto entry : mNodes)
+			frequencies.push_back(make_pair(entry.second->iFrequency, entry.second->fileName));
+		std::sort(frequencies.begin(), frequencies.end(), [](pair<int, string> a, pair<int, string> b) {
+			if (a.first > b.first)
+				return true;
+			else if (a.first == b.first && a.second < b.second)
+				return true;
+			else 
+				return false;
+		});
+		for (auto entry : frequencies)
+			cout << entry.second << " " << entry.first << "\n";
+	}
 public:
-	vector<string> analyze(AnalyzeCommand inCommand) {
+	void analyze(AnalyzeCommand inCommand) {
 		command = inCommand;
 		Node *pRoot = new Node(inCommand.getCommandArguments().front());
 
 		for (auto & entry : directory_iterator(command.getCommandArguments().front()))
 			if (entry.is_regular_file() && entry.path().extension() == ".cpp") {
 				Node* pNode = new Node(entry.path().generic_string());
+				pNode->fileName = entry.path().filename();
 				pNode->isExist = true;
 				mNodes[entry.path().generic_string()] = pNode;
 				pRoot->addOutNode(pNode);
@@ -108,11 +162,14 @@ public:
 			}
 		
 		while (!qQueue.empty()) {
-			Node* pNode = qQueue.front();
+			Node* pNode = qQueue.top();
+			
 			qQueue.pop();
 			analyzeFile(pNode);
 		}
-		return vector<string>();
+		printTree(pRoot);
+		cout << "\n";
+		printFrequencies();
 	}
 };
 
@@ -129,6 +186,5 @@ int main(int argc, char **argv)
 	catch (exception& e) {
 		cout << e.what();
 	}
-	
 	return 0;
 }

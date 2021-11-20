@@ -9,11 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${fileDirname}/build/analyze",
-            "args": ["/home/haykaz/Desktop/mysources"
-                    ,"-I"
-                    ,"/home/haykaz/Desktop/mysources/includes"
-                    ,"-I"
-                    ,"/home/haykaz/Desktop/mylibrary"],
+            "args": ["/home/haykaz/Desktop/TensorTest"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
