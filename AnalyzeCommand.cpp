@@ -7,14 +7,14 @@ using namespace std;
 using namespace filesystem;
 
 void AnalyzeCommand::validate() {
-	for (auto directory : vCommandArguments)
+	for (auto directory : *vCommandArguments)
 		if (!is_directory(directory))
 			throw InvalidDirectoryException("Analyze", directory);
 
-	for (auto option : mOptionArguments) {
+	for (auto option : *mOptionArguments) {
 		Option* pOption = pOptionManager->getOptionByName(option.first);
-		if (pOptionManager && pOptionManager->checkOptionArguments(pOption, option.second)) {
-			for (auto directory : option.second)
+		if (pOptionManager && pOptionManager->checkOptionArguments(pOption, *option.second)) {
+			for (auto directory : *option.second)
 				if (!is_directory(directory))
 					throw InvalidDirectoryException("Analyze", directory);
 		}

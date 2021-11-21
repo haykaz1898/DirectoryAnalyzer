@@ -11,6 +11,9 @@ add_executable(TensorTest
     Command.cpp
     AnalyzeCommand.cpp
     CommandParser.cpp
+    Node.cpp
+    Tree.cpp
+    Analyzer.cpp
     TensorTest.cpp
     )
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

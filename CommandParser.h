@@ -6,5 +6,5 @@ class CommandParser {
 private:
 	static std::string getOption(std::string input);
 public:
-	static void parse(int argc, char** argv, OptionManager& optionManager, Command& outCommand);
+	static void parse(int argc, char** argv, OptionManager& optionManager, Command* outCommand);
 };

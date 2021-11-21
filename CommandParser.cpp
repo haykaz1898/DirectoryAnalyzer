@@ -9,7 +9,7 @@ std::string CommandParser::getOption(string input) {
 	return "";
 }
 
-void CommandParser::parse(int argc, char** argv, OptionManager& optionManager, Command& outCommand) {
+void CommandParser::parse(int argc, char** argv, OptionManager& optionManager, Command* outCommand) {
 	vector<string> arguments;
 
 	vector<pair<string, vector<string>>> vOptionArguments;
@@ -20,14 +20,14 @@ void CommandParser::parse(int argc, char** argv, OptionManager& optionManager, C
 			startIndex += 1;
 			while (startIndex < argc) {
 				if (getOption(argv[startIndex]) == "")
-					outCommand.addOptionArgument(sOption, argv[startIndex]);
+					outCommand->addOptionArgument(sOption, argv[startIndex]);
 				else if (getOption(argv[startIndex]) != sOption)
 					break;
 				startIndex++;
 			}
 		}
-		else if (outCommand.getOptionArguments().empty())
-			outCommand.addCommandArgument(argv[startIndex]);
+		else if (outCommand->getOptionArguments()->empty())
+			outCommand->addCommandArgument(argv[startIndex]);
 		startIndex++;
 	}
 }
