@@ -1,6 +1,7 @@
 #include "CPPFileParser.h"
 
 using namespace std;
+
 std::vector<std::pair<int, int>> CPPFileParser::getCommentPositions(const string& inFile) {
 	vector<pair<int, int>> vResult;
 	for (int i = 0; i < inFile.size(); i++) {

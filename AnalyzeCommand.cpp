@@ -118,6 +118,7 @@ void AnalyzeCommand::validate() {
 			throw InvalidOptionException("Analyze", option.first);
 	}
 }
+
 AnalyzeCommand::AnalyzeCommand() {
 	pTree = new Tree();
 	pOptionManager = new OptionManager("Analyze");
