@@ -24,7 +24,7 @@ void AnalyzeCommand::populateTree(const path& inFilePath) {
 		int iCursorPosition = 0;
 		for (auto line : lines) {
 			bool bFileExist = false;
-			string sFileName = parseFileName(line);
+			string sFileName = CPPFileParser::parseFileName(line);
 			path file = path(sFileName);
 			auto filePath = getFilePath(file, sCurrentDirectory, line.find("\"") != string::npos);
 
@@ -45,7 +45,6 @@ void AnalyzeCommand::populateTree(const path& inFilePath) {
 			else
 				pTree->updateFrequencies(node);
 		}
-
 	}
 }
 
@@ -73,20 +72,6 @@ bool AnalyzeCommand::isFileExist(const path& inFile,const path& inDirectory) {
 			if (entry.path().filename() == inFile)
 				return true;
 	return false;
-}
-
-string AnalyzeCommand::parseFileName(const string& inLine) {
-	string sFilename;
-	for (int index = 0; index < inLine.size(); index++)
-		if (inLine[index] == '"' || inLine[index] == '<')
-			for (; index < inLine.size(); index++)
-				if (index < inLine.size()
-					&& inLine[index] != '\"'
-					&& inLine[index] != '<'
-					&& inLine[index] != '>')
-					if (inLine[index] != '\r')
-						sFilename += inLine[index];
-	return sFilename;
 }
 
 string AnalyzeCommand::readFile(const string& path) {

@@ -50,3 +50,17 @@ std::vector<std::string> CPPFileParser::getLines(const string& inFile) {
 		}
 	return lines;
 }
+
+string CPPFileParser::parseFileName(const string& inLine) {
+	string sFilename;
+	for (int index = 0; index < inLine.size(); index++)
+		if (inLine[index] == '"' || inLine[index] == '<')
+			for (; index < inLine.size(); index++)
+				if (index < inLine.size()
+					&& inLine[index] != '\"'
+					&& inLine[index] != '<'
+					&& inLine[index] != '>')
+					if (inLine[index] != '\r')
+						sFilename += inLine[index];
+	return sFilename;
+}

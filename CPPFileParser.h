@@ -7,4 +7,5 @@ private:
 	static bool isCommentedLine(int inLineCursor, std::vector<std::pair<int, int>>& inCommentPositions);
 public:
 	static std::vector<std::string> getLines(const std::string& inFile);
+	static std::string parseFileName(const std::string& inLine);
 };
