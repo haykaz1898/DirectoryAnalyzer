@@ -12,7 +12,7 @@ using namespace filesystem;
 void AnalyzeCommand::populateTree(const path& inFilePath) {
 	stack<path> oStack;
 	oStack.push(inFilePath);
-	vector<bool> isVisited;
+	vector<bool> vIsVisited;
 	path sCurrentDirectory;
 	while (!oStack.empty()) {
 		Node* pCurrentNode = pTree->getNode(oStack.top().generic_string());
@@ -20,46 +20,45 @@ void AnalyzeCommand::populateTree(const path& inFilePath) {
 		sCurrentDirectory = path(pCurrentNode->getPath()).parent_path();
 		pTree->setIsVisited(pCurrentNode);
 		
-		auto lines = CPPFileParser::getLines(readFile(pCurrentNode->getPath()));
+		vector<string> vLines = CPPFileParser::getLines(readFile(pCurrentNode->getPath()));
 		int iCursorPosition = 0;
-		for (auto line : lines) {
+		for (auto line : vLines) {
 			bool bFileExist = false;
 			string sFileName = CPPFileParser::parseFileName(line);
-			path file = path(sFileName);
-			auto filePath = getFilePath(file, sCurrentDirectory, line.find("\"") != string::npos);
+			path oFile = path(sFileName);
+			path oFilePath = getFilePath(oFile, sCurrentDirectory, line.find("\"") != string::npos);
 
-			if (filePath != "") {
+			if (oFilePath != "") {
 				bFileExist = true;
-				sCurrentDirectory = filePath.parent_path();
 			}
 			
-			auto node = pTree->addNewNode(file.filename().generic_string(), (filePath == "" ? (sCurrentDirectory / file) : filePath).generic_string());
-			pTree->addNodeToParent(pCurrentNode, node);
-			if (!pTree->isVisited(node)) {
-				node->increaseFrequency(1);
+			Node* pNode = pTree->addNewNode(oFile.filename().generic_string(), (oFilePath == "" ? (sCurrentDirectory / oFile) : oFilePath).generic_string());
+			pTree->addNodeToParent(pCurrentNode, pNode);
+			if (!pTree->isVisited(pNode)) {
+				pNode->increaseFrequency(1);
 				if (bFileExist) {
-					node->setFileExist(bFileExist);
-					oStack.push(filePath);
+					pNode->setFileExist(bFileExist);
+					oStack.push(oFilePath);
 				}
 			}
 			else
-				pTree->updateFrequencies(node);
+				pTree->updateFrequencies(pNode);
 		}
 	}
 }
 
 path AnalyzeCommand::getFilePath(const path& inFile, const path& inDirectory, bool isRelativePath) {
-	vector<path> paths;
+	vector<path> vPaths;
 	path oFoundedFilePath;
 	if (isRelativePath)
-		paths.push_back((inDirectory / inFile));
+		vPaths.push_back((inDirectory / inFile));
 	else {
 		auto vOptionArgs = getOptionArguments();
 		if (vOptionArgs->begin() != vOptionArgs->end())
 			for (auto sPath : *(*vOptionArgs->begin()).second)
-				paths.push_back((path(sPath) / inFile));
+				vPaths.push_back((path(sPath) / inFile));
 	}
-	for (auto entry : paths) {
+	for (auto entry : vPaths) {
 		if (isFileExist(entry.filename(), entry.parent_path()))
 			oFoundedFilePath = entry;
 	}
@@ -75,9 +74,9 @@ bool AnalyzeCommand::isFileExist(const path& inFile,const path& inDirectory) {
 }
 
 string AnalyzeCommand::readFile(const string& path) {
-	ifstream file(path);
-	string result;
-	return result.assign(istreambuf_iterator<char>(file), istreambuf_iterator<char>());
+	ifstream oFileStream(path);
+	string sResult;
+	return sResult.assign(istreambuf_iterator<char>(oFileStream), istreambuf_iterator<char>());
 }
 
 void AnalyzeCommand::run() {

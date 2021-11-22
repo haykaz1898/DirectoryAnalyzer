@@ -6,8 +6,8 @@
 using namespace std;
 
 Node* Tree::getNode(string inPath) { 
-	auto node = mNodes->find(inPath);
-	return node != mNodes->end() ? (*node).second : nullptr;
+	auto itNode = mNodes->find(inPath);
+	return itNode != mNodes->end() ? (*itNode).second : nullptr;
 }
 
 Node* Tree::addNewNode(const std::string& inFileName, const std::string& inFilePath) {
@@ -19,9 +19,16 @@ Node* Tree::addNewNode(const std::string& inFileName, const std::string& inFileP
 	}
 	return pNode;
 }
+
 void Tree::addNodeToParent(Node* inParent, Node* inNode) {
-	if (getNode(inParent->getPath()) && getNode(inNode->getPath()))
-		inParent->addChidren(inNode);
+	if (inParent && inNode && getNode(inParent->getPath()) && getNode(inNode->getPath())) {
+		bool bHasAlready = false;
+		for (auto entry : *(inParent->getChildren()))
+			if (entry == inNode)
+				bHasAlready = true;
+		if (!bHasAlready)
+			inParent->addChidren(inNode);
+	}
 }
 
 bool Tree::isVisited(Node* inNode) { return vIsVisited[inNode->getId()]; }
@@ -55,7 +62,7 @@ void Tree::printNode(Node* inNode, int inLevel) {
 }
 
 void Tree::printTree(Node* inNode) {
-	vector<bool> visited(mNodes->size(), false);
+	vector<bool> vVisited(mNodes->size(), false);
 	stack<Node*> oNodes;
 	oNodes.push(inNode);
 	int iLevel = 0;
@@ -66,19 +73,19 @@ void Tree::printTree(Node* inNode) {
 			cout << " (Cycle detected!) ";
 			isCycle = false;
 		}
-		if (!visited[pCurrentNode->getId()]) {
+		if (!vVisited[pCurrentNode->getId()]) {
 			printNode(pCurrentNode, iLevel);
 			iLevel++;
 		}				
-		if (pCurrentNode->getChildren()->size() == 0 || visited[pCurrentNode->getId()]) {
-			visited[pCurrentNode->getId()] = false;
+		if (pCurrentNode->getChildren()->size() == 0 || vVisited[pCurrentNode->getId()]) {
+			vVisited[pCurrentNode->getId()] = false;
 			oNodes.pop();
 			iLevel--;
 		}
 		else {
-			visited[pCurrentNode->getId()] = true;	
+			vVisited[pCurrentNode->getId()] = true;	
 			for (auto node : *pCurrentNode->getChildren())
-				if (!visited[node->getId()])
+				if (!vVisited[node->getId()])
 					oNodes.push(node);
 				else
 					isCycle = true;
@@ -87,10 +94,10 @@ void Tree::printTree(Node* inNode) {
 }
 
 void Tree::printFrequencies() {
-	vector<pair<int, string>> frequencies;
+	vector<pair<int, string>> vFrequencies;
 	for (auto entry : *mNodes)
-		frequencies.push_back(make_pair(entry.second->getFrequency(), entry.second->getFileName()));
-		sort(frequencies.begin(), frequencies.end(), [](pair<int, string> a, pair<int, string> b) {
+		vFrequencies.push_back(make_pair(entry.second->getFrequency(), entry.second->getFileName()));
+		sort(vFrequencies.begin(), vFrequencies.end(), [](pair<int, string> a, pair<int, string> b) {
 		if (a.first > b.first)
 			return true;
 		else if (a.first == b.first && a.second < b.second)
@@ -98,7 +105,7 @@ void Tree::printFrequencies() {
 		else 
 			return false;
 	});
-	for (auto entry : frequencies)
+	for (auto entry : vFrequencies)
 		cout << entry.second << " " << entry.first << "\n";
 }
 

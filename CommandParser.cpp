@@ -11,8 +11,7 @@ std::string CommandParser::getOption(string input) {
 }
 
 void CommandParser::parse(int argc, char** argv, Command* outCommand) {
-	vector<string> arguments;
-
+	vector<string> vArguments;
 	vector<pair<string, vector<string>>> vOptionArguments;
 	int startIndex = 1;
 	while (startIndex < argc) {

@@ -35,11 +35,11 @@ bool CPPFileParser::isCommentedLine(int inLineCursor, std::vector<std::pair<int,
 }
 
 std::vector<std::string> CPPFileParser::getLines(const string& inFile) {
-	vector<string> lines;
-	vector<pair<int, int>> commentPositions = getCommentPositions(inFile);
+	vector<string> vLines;
+	vector<pair<int, int>> vCommentPositions = getCommentPositions(inFile);
 
 	for (int i = 0; i < inFile.size(); i++)
-		if (inFile[i] == '#' && inFile.substr(i + 1, 7) == "include" && !isCommentedLine(i, commentPositions)) {
+		if (inFile[i] == '#' && inFile.substr(i + 1, 7) == "include" && !isCommentedLine(i, vCommentPositions)) {
 			string line = inFile.substr(i, 8);
 			i += line.length() + 1;
 			for (; i < inFile.size(); i++)
@@ -47,9 +47,9 @@ std::vector<std::string> CPPFileParser::getLines(const string& inFile) {
 					line += inFile[i];
 				else
 					break;
-			lines.push_back(line);
+			vLines.push_back(line);
 		}
-	return lines;
+	return vLines;
 }
 
 string CPPFileParser::parseFileName(const string& inLine) {
