@@ -18,6 +18,8 @@ public:
 	void addOptionArgument(std::string inOption, std::string inArgument);
 	std::map<std::string, std::vector<std::string>*>* getOptionArguments();
 
+	virtual void run() = 0;
+	virtual void validate() = 0;
 	Command();
-	~Command();
+	virtual ~Command();
 };

@@ -1,6 +1,7 @@
 #include "CommandParser.h"
 #include <vector>
 using namespace std;
+
 std::string CommandParser::getOption(string input) {
 	if (input[0] == '-' && input[1] != '-')
 		return string(1, input[0]) + string(1, input[1]);
@@ -9,7 +10,7 @@ std::string CommandParser::getOption(string input) {
 	return "";
 }
 
-void CommandParser::parse(int argc, char** argv, OptionManager& optionManager, Command* outCommand) {
+void CommandParser::parse(int argc, char** argv, Command* outCommand) {
 	vector<string> arguments;
 
 	vector<pair<string, vector<string>>> vOptionArguments;
